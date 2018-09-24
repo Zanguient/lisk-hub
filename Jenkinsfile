@@ -99,24 +99,27 @@ node('lisk-hub') {
       try {
         ansiColor('xterm') {
           withCredentials([string(credentialsId: 'lisk-hub-testnet-passphrase', variable: 'TESTNET_PASSPHRASE')]) {
+            dir('docker') {
+                git branch: '2.2.0', url: 'https://github.com/LiskHQ/lisk-docker'
+            }
+
             sh '''
+
             export N=${EXECUTOR_NUMBER:-0}; N=$((N+1))
-            # End to End test configuration
             export DISPLAY=:1$N
             Xvfb :1$N -ac -screen 0 1280x1024x24 &
 
-	    cp -r ~/lisk-docker/examples/development $WORKSPACE/$BRANCH_NAME
-	    cd $WORKSPACE/$BRANCH_NAME
-	    cp /home/lisk/blockchain_explorer.db.gz ./blockchain.db.gz
-	    LISK_VERSION=1.0.1 make coldstart
-	    LISK_PORT=$( docker-compose port lisk 4000 |cut -d ":" -f 2 )
-	    cd -
+            cp -r docker/examples $WORKSPACE/$BRANCH_NAME
+            cd $WORKSPACE/$BRANCH_NAME
+            cp .env.development .env
+            cp /home/lisk/blockchain_explorer.db.gz dev_blockchain.db.gz
+            ENV_LISK_VERSION=1.1.0-alpha.4 make coldstart
+            LISK_PORT=$( docker-compose port lisk 4000 |cut -d ":" -f 2 )
+            cd -
 
-            # Run end-to-end tests
             export CYPRESS_baseUrl=http://127.0.0.1:300$N/#/
-	        export CYPRESS_coreUrl=http://127.0.0.1:$( docker-compose port lisk 4000 |cut -d ":" -f 2 )
-	        cd -
-	        npm run serve --  $WORKSPACE/app/build -p 300$N -a 127.0.0.1 &>server.log &
+            export CYPRESS_coreUrl=http://127.0.0.1:$LISK_PORT
+            npm run serve --  $WORKSPACE/app/build -p 300$N -a 127.0.0.1 &>server.log &
             npm run cypress:run -- --record
             '''
           }
@@ -128,11 +131,11 @@ node('lisk-hub') {
     }
   } catch(err) {
     echo "Error: ${err}"
-    ansiColor('xterm') {	
-      sh '''	
-      cd $WORKSPACE/$BRANCH_NAME	
-      docker-compose logs	
-      '''	
+    ansiColor('xterm') {
+      sh '''
+      cd $WORKSPACE/$BRANCH_NAME
+      docker-compose logs
+      '''
     }
   } finally {
     ansiColor('xterm') {
