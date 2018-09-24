@@ -1,11 +1,12 @@
 import i18next from 'i18next';
 import actionTypes from '../constants/actions';
-import { loadingStarted, loadingFinished } from '../utils/loading';
+import { loadingStarted, loadingFinished } from '../actions/loading';
 import { send, getTransactions, getSingleTransaction, unconfirmedTransactions } from '../utils/api/transactions';
 import { getDelegate } from '../utils/api/delegate';
 import { loadDelegateCache } from '../utils/delegates';
 import { extractAddress } from '../utils/account';
 import { loadAccount, passphraseUsed } from './account';
+import { getTimeOffset } from '../utils/hacks';
 import Fees from '../constants/fees';
 import { toRawLsk } from '../utils/lsk';
 import transactionTypes from '../constants/transactionTypes';
@@ -55,7 +56,7 @@ export const transactionsUpdateUnconfirmed = ({ address, pendingTransactions }) 
 
 export const loadTransactionsFinish = accountUpdated =>
   (dispatch) => {
-    loadingFinished(actionTypes.transactionsLoad);
+    dispatch(loadingFinished(actionTypes.transactionsLoad));
     dispatch({
       data: accountUpdated,
       type: actionTypes.transactionsLoadFinish,
@@ -67,7 +68,7 @@ export const loadTransactions = ({ publicKey, address }) =>
     const activePeer = getState().peers.data;
     const lastActiveAddress = publicKey && extractAddress(publicKey);
     const isSameAccount = lastActiveAddress === address;
-    loadingStarted(actionTypes.transactionsLoad);
+    dispatch(loadingStarted(actionTypes.transactionsLoad));
     getTransactions({ activePeer, address, limit: 25 })
       .then((transactionsResponse) => {
         dispatch(loadAccount({
@@ -215,7 +216,8 @@ export const sent = ({
 }) =>
   (dispatch, getState) => {
     const activePeer = getState().peers.data;
-    send(activePeer, recipientId, toRawLsk(amount), passphrase, secondPassphrase, data)
+    const timeOffset = getTimeOffset(getState());
+    send(activePeer, recipientId, toRawLsk(amount), passphrase, secondPassphrase, data, timeOffset)
       .then((response) => {
         dispatch({
           data: {

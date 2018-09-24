@@ -7,10 +7,8 @@ import offlineMiddleware from './offline';
 // ToDo : enable this one when you solve the problem with multi account management
 // import notificationMiddleware from './notification';
 import votingMiddleware from './voting';
-import savedAccountsMiddleware from './savedAccounts';
 import followedAccountsMiddleware from './followedAccounts';
 import socketMiddleware from './socket';
-import savedSettingsMiddleware from './savedSettings';
 
 export default [
   thunk,
@@ -22,7 +20,5 @@ export default [
   offlineMiddleware,
   // notificationMiddleware,
   votingMiddleware,
-  savedAccountsMiddleware,
   followedAccountsMiddleware,
-  savedSettingsMiddleware,
 ];
