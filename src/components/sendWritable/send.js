@@ -34,29 +34,17 @@ class SendWritable extends React.Component {
 
   componentDidMount() {
     if (this.props.prevState) {
-      const newState = Object.entries({
-        recipient: {
-          value: this.props.prevState.recipient || this.state.recipient.value,
-          required: true,
-        },
-        amount: {
-          value: this.props.prevState.amount || this.state.amount.value,
-          required: true,
-        },
-        reference: {
-          value: this.props.prevState.reference || this.state.reference.value,
-          required: false,
-        },
-      }).reduce((entries, [name, props]) => {
+      const newState = ['recipient', 'amount', 'reference'].reduce((entries, name) => {
+        const value = this.props.prevState[name] || this.state[name].value;
         return {
           ...entries,
           [name]: {
-            ...props,
-            error: this.validateInput(name, props.value, props.required)
-          }
-        }
+            value,
+            error: value ? this.validateInput(name, value, true) : undefined,
+          },
+        };
       }, {});
-      this.setState({...newState, ...authStatePrefill(this.props.account)});
+      this.setState({ ...newState, ...authStatePrefill(this.props.account) });
     }
   }
 
