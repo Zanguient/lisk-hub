@@ -160,7 +160,7 @@ describe('Utils: Delegate', () => {
         .returnsPromise().resolves({ data: { votes: [1], votesUsed: 1 } });
       const returnedPromise = getAlllVotes(activePeer, address);
       expect(returnedPromise).to.eventually.equal([1]);
-    });    
+    });
   });
 
   describe('getVoters', () => {
